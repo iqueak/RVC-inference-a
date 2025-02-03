@@ -303,6 +303,7 @@ class RVC:
         return self.run(audio,f0_up_key,f0_method,index_rate,filter_radius,protect,output_device,output_volume,f0_spec)
 
 
+    # In inferrvc/modules.py (modified from the first code block I provided)
     def run(
         self,
         audio:str|torch.Tensor,
@@ -345,6 +346,8 @@ class RVC:
         aif=audio.__dict__.get('frequency',None) #It's possible to add new attributes to a tensor, in my own code base I use `frequency:int` to define the sample rate of the audio.
         if aif is not None:
             audio=ResampleCache.resample((aif,16000),audio.to(self.config.device,non_blocking=True),self.config.device)
+            if audio.dtype == torch.float16: #newly added
+                audio = audio.to(torch.float32)
             am = audio.abs().max()
             if am > 1.1:
                 audio /= am
@@ -353,6 +356,8 @@ class RVC:
         # else assume audio is already 16k
         if output_volume is RVC.MATCH_ORIGINAL:
             lufsorig = self._LOUD16K(audio)
+            if audio.dtype == torch.float16: #newly added
+                    audio = audio.to(torch.float32)
 
         f0_up_key = int(f0_up_key) # does it need to be tho?
         times = [0, 0, 0]
@@ -373,6 +378,16 @@ class RVC:
             f0_spec
         )
         del audio
+
+        audio_dype = audio_opt.dtype
+        lufsorig_dtype = lufsorig.dtype
+
+        audio_opt = audio_opt.to(torch.float32)
+
+        if audio_opt.dtype == torch.float16:
+            audio_opt = audio_opt.to(torch.float32)
+
+
         if self.outputfreq is not None:
             audio_opt = ResampleCache.resample((self.tgt_sr,self.outputfreq), audio_opt,self.config.device)
         if output_volume is RVC.MATCH_ORIGINAL:
@@ -386,7 +401,6 @@ class RVC:
         nout= audio_opt.to(output_device,non_blocking=not self.returnblocking) if output_device is not None else audio_opt.to(self.config.device,non_blocking=not self.returnblocking)
         del audio_opt
         return nout
-
 
 
 _SUBTYPE2DTYPE = {
