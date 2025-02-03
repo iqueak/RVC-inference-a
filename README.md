@@ -1,5 +1,26 @@
 # RVC Inference
 
+
+## Setup
+
+```bash
+conda create -n "voice-test" python=3.10 ipykernel ipywidgets -y
+conda activate voice-test
+pip install xformers "torch<2.4" torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 -U 
+
+# fix omegaconf
+pip install "pip<24.1"
+
+pip install -e .
+```
+
+
+
+
+
+
+# Original Readme
+
 [**English**](./README.md) | [**中文简体**](./docs/README.ch.md) | [**日本語**](./docs/README.ja.md) | [**한국어**](./docs/README.ko.md) | [**Français**](./docs/README.fr.md)| [**Türkçe**](./docs/README.tr.md)
 ------
 Translations provided by GPT-4.
