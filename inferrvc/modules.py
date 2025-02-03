@@ -77,7 +77,7 @@ class RVC:
     _hubert_model=None
     _pipeline=None
     _LOUD16K=torchaudio.transforms.Loudness(16000).to(_devgp,non_blocking=True) #going to assume these are small enough kernels to be neglible memory hogs.
-    outputfreq = _try_int(os.getenv('RVC_OUTPUTFREQ','44100')) #so changeable but should probably change it for the specific instance only.
+    outputfreq = _try_int(os.getenv('RVC_OUTPUTFREQ','48000')) #so changeable but should probably change it for the specific instance only.
     _LOUDOUTPUT=torchaudio.transforms.Loudness(outputfreq).to(_devgp,non_blocking=True)
     returnblocking = bool(os.getenv('RVC_RETURNBLOCKING', 'True'))
     MATCH_ORIGINAL=1
@@ -379,7 +379,7 @@ class RVC:
         )
         del audio
 
-        audio_opt = audio_opt.to(torch.float32)
+        audio_opt = audio_opt.to(torch.float32)  # shape: 1644480
 
         if audio_opt.dtype == torch.float16:
             audio_opt = audio_opt.to(torch.float32)
@@ -397,7 +397,18 @@ class RVC:
         #start working prematurely unless you call cuda/cpu .synchronize() before running numpy/numba code on the tensor.
         nout= audio_opt.to(output_device,non_blocking=not self.returnblocking) if output_device is not None else audio_opt.to(self.config.device,non_blocking=not self.returnblocking)
         del audio_opt
+
+        # fix: adding frquency to allow consecutive pipe runs
+        nout.frequency=self.outputfreq
         return nout
+
+class RVCInference(RVC):
+    """wrapper for RVC class with exact behaviours; 
+    Mostly for code aesthetic considerations.
+    """
+
+    def __init__(self, model:str,index:str=None, config=None):
+        super().__init__(model,index,config)
 
 
 _SUBTYPE2DTYPE = {
@@ -435,4 +446,24 @@ def load_torchaudio(
     if channels_first:
         waveform = waveform.t()
     waveform.frequency=sample_rate
+    return waveform, sample_rate
+
+
+def load_torchaudio_from_numpy(
+    waveform_np: np.ndarray,
+    sample_rate: int,
+    channels_first: bool = True,
+) -> tuple[torch.Tensor, int]:
+    # Convert the NumPy array to a torch tensor.
+    waveform = torch.from_numpy(waveform_np)
+    
+    # If the waveform has two dimensions (e.g. shape [num_samples, num_channels])
+    # and you want the channels to be first (i.e. [num_channels, num_samples]),
+    # then transpose it.
+    if channels_first and waveform.ndim == 2:
+        waveform = waveform.t()
+    
+    # Optionally, you can attach the sample rate as an attribute (similar to the original code)
+    waveform.frequency = sample_rate
+    
     return waveform, sample_rate
