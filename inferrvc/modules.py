@@ -379,9 +379,6 @@ class RVC:
         )
         del audio
 
-        audio_dype = audio_opt.dtype
-        lufsorig_dtype = lufsorig.dtype
-
         audio_opt = audio_opt.to(torch.float32)
 
         if audio_opt.dtype == torch.float16:

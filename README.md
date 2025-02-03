@@ -11,6 +11,9 @@ pip install xformers "torch<2.4" torchvision torchaudio --index-url https://down
 # fix omegaconf
 pip install "pip<24.1"
 
+# for downloading models
+huggingface-cli login
+
 pip install -e .
 ```
 
