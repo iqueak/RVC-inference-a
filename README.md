@@ -1,26 +1,17 @@
 # RVC Inference
 
+## Difference from original
+
+fairseq update for using with torch 2.6.0+cu126
 
 ## Setup
 
 ```bash
-conda create -n "voice-test" python=3.10 ipykernel ipywidgets -y
-conda activate voice-test
-pip install xformers "torch<2.4" torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 -U 
+# fairseq require torch with cuda
+pip install torch==2.6.0+cu126 torchaudio==2.6.0+cu126 --extra-index-url https://download.pytorch.org/whl/cu126
 
-# fix omegaconf
-pip install "pip<24.1"
-
-# for downloading models
-huggingface-cli login
-
-pip install -e .
+pip install .
 ```
-
-
-
-
-
 
 # Original Readme
 
